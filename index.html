@@ -4,37 +4,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Procesar Archivo</title>
+    <!-- Bootstrap CSS desde CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery y Bootstrap JS desde CDN -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </head>
 <body>
-    <h1>Procesar Archivo</h1>
+    
+    <div class="container mt-5">
+        <h1 class="mb-4">Procesar Archivo</h1>
 
-    <input type="file" id="fileInput" accept=".txt" />
-    <br><br>
+        <div class="form-group col-md-6">
+            <label for="fileInput">Selecciona un archivo:</label>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="fileInput" accept=".txt"/>
+                <label class="custom-file-label" for="fileInput">Elige un archivo...</label>
+            </div>
+        </div>
 
-    <label for="numberInput">Introduce el número de vecinos:</label>
-    <input type="number" id="numberInput" min="1" />
-    <br><br>
+        <div class="form-group col-md-6">
+            <label for="numberInput">Introduce el número de vecinos:</label>
+            <input type="number" class="form-control" id="numberInput" min="1" />
+        </div>
 
-    <label for="optionSelect">Selecciona una opción:</label>
-    <select id="optionSelect">
-        <option value="CorPearson">Correlación de Pearson</option>
-        <option value="DistCoseno">Distancia Coseno</option>
-        <option value="DistEuclidea">Distancia Euclidiana</option>
-    </select>
-    <br><br>
+        <div class="form-group col-md-6">
+            <label for="optionSelect">Selecciona una opción:</label>
+            <select class="form-control" id="optionSelect">
+                <option value="CorPearson">Correlación de Pearson</option>
+                <option value="DistCoseno">Distancia Coseno</option>
+                <option value="DistEuclidea">Distancia Euclidiana</option>
+            </select>
+        </div>
 
-    <label for="predictionSelect">Selecciona tipo de predicción:</label>
-    <select id="predictionSelect">
-        <option value="simple">Predicción Simple</option>
-        <option value="diferencia">Diferencia con la Media</option>
-    </select>
-    <br><br>
+        <div class="form-group col-md-6">
+            <label for="predictionSelect">Selecciona tipo de predicción:</label>
+            <select class="form-control" id="predictionSelect">
+                <option value="simple">Predicción Simple</option>
+                <option value="diferencia">Diferencia con la Media</option>
+            </select>
+        </div>
 
-    <button id="processButton">Procesar</button>
+        <div class="form-group col-md-6">
+            <button id="processButton" class="btn btn-primary">Procesar</button>
+        </div>
+    </div>
 
     <script>
+        // Actualiza la etiqueta del archivo seleccionado
+        document.getElementById("fileInput").addEventListener("change", function() {
+            const fileName = this.files[0] ? this.files[0].name : "Elige un archivo...";
+            const label = this.nextElementSibling;
+            label.innerText = fileName; // Cambia el texto del label al nombre del archivo
+        });
+
+
         function calcularCorrelacionPearson(x, y) {
                 // Filtrar los pares válidos (mismo índice, sin NaN)
+                // Mete en un pair los pares no Nulos
                 const validPairs = x.reduce((acc, xi, i) => {
                     if (!isNaN(xi) && !isNaN(y[i])) {
                         acc.push([xi, y[i]]); // Solo se añade el par si ambos son válidos
@@ -45,14 +73,17 @@
                 // Desestructurar los valores válidos en arrays separados
                 const validX = validPairs.map(pair => pair[0]);
                 const validY = validPairs.map(pair => pair[1]);
-
+                
+                // Comrpueba si no hay pares validos
                 const n = validX.length;
-
                 if (n === 0) return 0; // No hay pares válidos
 
+                // Sumatorio
                 const sumX = validX.reduce((a, b) => a + b, 0);
                 const sumY = validY.reduce((a, b) => a + b, 0);
+                // Sumatorio mas el producto xi y su par en yi
                 const sumXY = validX.reduce((sum, xi, i) => sum + xi * validY[i], 0);
+                // sumatorio mas el cuadrado de su punto
                 const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
                 const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
 

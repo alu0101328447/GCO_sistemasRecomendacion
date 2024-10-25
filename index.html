@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Procesar Archivo</title>
+    <style>
+        #result {
+            white-space: pre-wrap; /* Mantiene los saltos de línea y los espacios */
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto; /* Añade scroll si el contenido es muy largo */
+        }
+    </style>
 </head>
 <body>
     <h1>Procesar Archivo</h1>
@@ -32,88 +42,69 @@
 
     <button id="processButton">Procesar</button>
 
+    <div id="result"></div> <!-- Sección para mostrar el resultado -->
+
     <script>
         function calcularCorrelacionPearson(x, y) {
-                // Filtrar los pares válidos (mismo índice, sin NaN)
-                const validPairs = x.reduce((acc, xi, i) => {
-                    if (!isNaN(xi) && !isNaN(y[i])) {
-                        acc.push([xi, y[i]]); // Solo se añade el par si ambos son válidos
-                    }
-                    return acc;
-                }, []);
+            // Filtrar los pares válidos (mismo índice, sin NaN)
+            const validPairs = x.reduce((acc, xi, i) => {
+                if (!isNaN(xi) && !isNaN(y[i])) {
+                    acc.push([xi, y[i]]); // Solo se añade el par si ambos son válidos
+                }
+                return acc;
+            }, []);
 
-                // Desestructurar los valores válidos en arrays separados
-                const validX = validPairs.map(pair => pair[0]);
-                const validY = validPairs.map(pair => pair[1]);
+            const validX = validPairs.map(pair => pair[0]);
+            const validY = validPairs.map(pair => pair[1]);
 
-                const n = validX.length;
+            const n = validX.length;
 
-                if (n === 0) return 0; // No hay pares válidos
+            if (n === 0) return 0; // No hay pares válidos
 
-                const sumX = validX.reduce((a, b) => a + b, 0);
-                const sumY = validY.reduce((a, b) => a + b, 0);
-                const sumXY = validX.reduce((sum, xi, i) => sum + xi * validY[i], 0);
-                const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
-                const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
+            const sumX = validX.reduce((a, b) => a + b, 0);
+            const sumY = validY.reduce((a, b) => a + b, 0);
+            const sumXY = validX.reduce((sum, xi, i) => sum + xi * validY[i], 0);
+            const sumX2 = validX.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumY2 = validY.reduce((sum, yi) => sum + yi * yi, 0);
 
-                const numerator = n * sumXY - sumX * sumY;
-                const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+            const numerator = n * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
 
-                return denominator === 0 ? 0 : numerator / denominator; // Evita división por cero
-            }
+            return denominator === 0 ? 0 : numerator / denominator; // Evita división por cero
+        }
 
+        function calcularDistanciaCoseno(a, b) {
+            const validPairs = a.reduce((acc, ai, i) => {
+                if (!isNaN(ai) && !isNaN(b[i])) {
+                    acc.push([ai, b[i]]);
+                }
+                return acc;
+            }, []);
 
-            function calcularDistanciaCoseno(a, b) {
-                // Filtrar los pares válidos (mismo índice, sin NaN)
-                const validPairs = a.reduce((acc, ai, i) => {
-                    if (!isNaN(ai) && !isNaN(b[i])) {
-                        acc.push([ai, b[i]]); // Solo se añade el par si ambos son válidos
-                    }
-                    return acc;
-                }, []);
+            const validA = validPairs.map(pair => pair[0]);
+            const validB = validPairs.map(pair => pair[1]);
 
-                // Desestructurar los valores válidos en arrays separados
-                const validA = validPairs.map(pair => pair[0]);
-                const validB = validPairs.map(pair => pair[1]);
+            const dotProduct = validA.reduce((sum, ai, i) => sum + ai * validB[i], 0);
+            const magnitudeA = Math.sqrt(validA.reduce((sum, ai) => sum + ai * ai, 0));
+            const magnitudeB = Math.sqrt(validB.reduce((sum, bi) => sum + bi * bi, 0));
 
-                const dotProduct = validA.reduce((sum, ai, i) => sum + ai * validB[i], 0);
-                const magnitudeA = Math.sqrt(validA.reduce((sum, ai) => sum + ai * ai, 0));
-                const magnitudeB = Math.sqrt(validB.reduce((sum, bi) => sum + bi * bi, 0));
+            return (magnitudeA === 0 || magnitudeB === 0) ? 1 : 1 - (dotProduct / (magnitudeA * magnitudeB));
+        }
 
-                // Evitar división por cero
-                return (magnitudeA === 0 || magnitudeB === 0) ? 1 : 1 - (dotProduct / (magnitudeA * magnitudeB)); // Devuelve la distancia coseno
-            }
+        function calcularDistanciaEuclidiana(a, b) {
+            const validPairs = a.reduce((acc, ai, i) => {
+                if (!isNaN(ai) && !isNaN(b[i])) {
+                    acc.push([ai, b[i]]);
+                }
+                return acc;
+            }, []);
 
+            const sumOfSquares = validPairs.reduce((sum, pair) => {
+                const [ai, bi] = pair;
+                return sum + Math.pow(ai - bi, 2);
+            }, 0);
 
-            function calcularDistanciaEuclidiana(a, b) {
-                // Filtrar los pares válidos (mismo índice, sin NaN)
-                const validPairs = a.reduce((acc, ai, i) => {
-                    if (!isNaN(ai) && !isNaN(b[i])) {
-                        acc.push([ai, b[i]]); // Solo se añade el par si ambos son válidos
-                    }
-                    return acc;
-                }, []);
-
-                // Calcular la suma de los cuadrados de las diferencias
-                const sumOfSquares = validPairs.reduce((sum, pair) => {
-                    const [ai, bi] = pair;
-                    return sum + Math.pow(ai - bi, 2);
-                }, 0);
-
-                return Math.sqrt(sumOfSquares); // Devuelve la raíz cuadrada de la suma de los cuadrados
-            }
-
-
-        function descargarArchivo(nombreArchivo, contenido) {
-            const blob = new Blob([contenido], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = nombreArchivo;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+            return Math.sqrt(sumOfSquares);
         }
 
         document.getElementById('processButton').addEventListener('click', function() {
@@ -136,140 +127,107 @@
                 const fileContent = e.target.result.split('\n');
                 const minValue = parseFloat(fileContent[0].trim());
                 const maxValue = parseFloat(fileContent[1].trim());
-                //const matrix = fileContent.slice(2).map(line => line.split(' ').map(val => val === '-' ? null : parseFloat(val)));
                 const matrix = fileContent.slice(2).map(line => 
                     line.trim().split(' ').map(val => val === '-' ? NaN : parseFloat(val))
                 );
 
-                // Mostrar matriz original
                 let resultMessage = `Matriz original:\n${matrix.map(row => row.join(' ')).join('\n')}\n\n`;
 
                 const predictions = calcularPredicciones(matrix, numNeighbors, option);
-
                 const utilityMatrix = matrix.map((row, i) => 
                     row.map((value, j) => isNaN(value) ? predictions[i][j] : value)
                 );
-                // Mostrar matriz de utilidad
                 resultMessage += `Matriz de utilidad con predicciones:\n${utilityMatrix.map(row => row.join(' ')).join('\n')}\n\n`;
 
-                // Similitud y vecinos seleccionados
                 const similarityInfo = calcularSimilitudes(matrix, utilityMatrix, numNeighbors, option);
                 resultMessage += similarityInfo;
 
-                // Descargar el archivo con los resultados
-                const nombreArchivo = option + '.txt';
-                descargarArchivo(nombreArchivo, resultMessage);
+                // Mostrar el resultado en el elemento div
+                document.getElementById('result').textContent = resultMessage;
             };
 
             reader.readAsText(fileInput.files[0]);
         });
 
         function calcularPredicciones(matrix, numNeighbors, option) {
-            const predictions = matrix.map((row, rowIndex) => 
+            return matrix.map((row, rowIndex) => 
                 row.map((value, colIndex) => 
                     (isNaN(value) ? calcularValorFaltante(matrix, rowIndex * row.length + colIndex, numNeighbors, option) : value)
                 )
             );
-            return predictions;
         }
 
         function calcularValorFaltante(matrix, index, numNeighbors, option) {
-            const userIndex = Math.floor(index / matrix[0].length); // Índice del usuario (fila)
-            const itemIndex = index % matrix[0].length; // Índice del ítem (columna)
+            const userIndex = Math.floor(index / matrix[0].length); 
+            const itemIndex = index % matrix[0].length; 
 
-            // Crear una lista de similitudes
             const similarities = [];
 
-                for (let i = 0; i < matrix.length; i++) {
-                    if (i !== userIndex && matrix[i][itemIndex] !== null) {
+            for (let i = 0; i < matrix.length; i++) {
+                if (i !== userIndex && matrix[i][itemIndex] !== null) {
+                    let similarity;
+
+                    if (option === 'CorPearson') {
+                        similarity = calcularCorrelacionPearson(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                    } else if (option === 'DistCoseno') {
+                        similarity = calcularDistanciaCoseno(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                    } else if (option === 'DistEuclidea') {
+                        similarity = calcularDistanciaEuclidiana(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                    }
+
+                    if (!isNaN(similarity)) {
+                        similarities.push({ index: i, similarity });
+                    }
+                }
+            }
+
+            similarities.sort((a, b) => b.similarity - a.similarity);
+            const neighbors = similarities.slice(0, numNeighbors);
+
+            let numerator = 0;
+            let denominator = 0;
+
+            for (const neighbor of neighbors) {
+                const neighborValue = matrix[neighbor.index][itemIndex];
+                if ((neighborValue !== null) && (!isNaN(neighborValue))) {
+                    numerator += neighborValue * neighbor.similarity;
+                    denominator += neighbor.similarity;
+                }
+            }
+
+            return denominator === 0 ? null : parseFloat((numerator / denominator).toFixed(3));
+        }
+
+        function calcularSimilitudes(originalMatrix, utilityMatrix, numNeighbors, option) {
+            let resultMessage = "Similitudes y vecinos seleccionados:\n";
+            
+            for (let i = 0; i < utilityMatrix.length; i++) {
+                const userSimilarities = [];
+
+                for (let j = 0; j < utilityMatrix.length; j++) {
+                    if (i !== j) {
                         let similarity;
 
-                        // Calcular similitud según la opción seleccionada
                         if (option === 'CorPearson') {
-                            similarity = calcularCorrelacionPearson(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                            similarity = calcularCorrelacionPearson(utilityMatrix[i], utilityMatrix[j]);
                         } else if (option === 'DistCoseno') {
-                            similarity = calcularDistanciaCoseno(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                            similarity = calcularDistanciaCoseno(utilityMatrix[i], utilityMatrix[j]);
                         } else if (option === 'DistEuclidea') {
-                            similarity = calcularDistanciaEuclidiana(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                            similarity = calcularDistanciaEuclidiana(utilityMatrix[i], utilityMatrix[j]);
                         }
 
-                        if (!isNaN(similarity)) {
-                            similarities.push({ index: i, similarity });
-                        }
+                        userSimilarities.push({ index: j, similarity });
                     }
                 }
 
-                // Ordenar por similitud y seleccionar los vecinos más cercanos
-                similarities.sort((a, b) => b.similarity - a.similarity); // Ordenar de mayor a menor
-                const neighbors = similarities.slice(0, numNeighbors);
+                userSimilarities.sort((a, b) => b.similarity - a.similarity);
+                const neighbors = userSimilarities.slice(0, numNeighbors);
 
-                // Calcular la predicción ponderada
-                let numerator = 0;
-                let denominator = 0;
-
-                for (const neighbor of neighbors) {
-                    const neighborValue = matrix[neighbor.index][itemIndex];
-                    if ((neighborValue !== null) && (!isNaN(neighborValue))) {
-                        numerator += neighborValue * neighbor.similarity; // Ponderar el valor del vecino por su similitud
-                        denominator += neighbor.similarity; // Sumar las similitudes
-                    }
-                }
-
-                // Predecir el valor
-                //return denominator === 0 ? null : numerator / denominator; // Evitar división por cero
-                return denominator === 0 ? null : parseFloat((numerator / denominator).toFixed(3)); // Evitar división por cero
+                resultMessage += `Usuario ${i + 1}: ` + neighbors.map(n => `Usuario ${n.index + 1} (${n.similarity.toFixed(3)})`).join(', ') + '\n';
             }
 
-
-            function calcularSimilitudes(originalMatrix, utilityMatrix, numNeighbors, option) {
-                let resultMessage = "Similitudes y vecinos seleccionados:\n";
-                
-                // Iterar sobre cada usuario
-                for (let i = 0; i < utilityMatrix.length; i++) {
-                    const userSimilarities = [];
-
-                    // Comparar con otros usuarios
-                    for (let j = 0; j < utilityMatrix.length; j++) {
-                        if (i !== j) {
-                            // Filtrar solo las calificaciones conocidas
-                            const userA = utilityMatrix[i].filter((val, index) => val !== null && utilityMatrix[j][index] !== null);
-                            const userB = utilityMatrix[j].filter((val, index) => val !== null && utilityMatrix[i][index] !== null);
-
-                            if (userA.length > 0 && userB.length > 0) {
-                                let similarity;
-
-                                // Calcular similitud según la opción seleccionada
-                                if (option === 'CorPearson') {
-                                    similarity = calcularCorrelacionPearson(userA, userB);
-                                } else if (option === 'DistCoseno') {
-                                    similarity = calcularDistanciaCoseno(userA, userB);
-                                } else if (option === 'DistEuclidea') {
-                                    similarity = calcularDistanciaEuclidiana(userA, userB);
-                                }
-
-                                // Agregar similitud a la lista
-                                if (!isNaN(similarity)) {
-                                    userSimilarities.push({ index: j, similarity });
-                                }
-                            }
-                        }
-                    }
-
-                    // Ordenar similitudes y seleccionar vecinos más cercanos
-                    userSimilarities.sort((a, b) => b.similarity - a.similarity); // Ordenar de mayor a menor
-                    const neighbors = userSimilarities.slice(0, numNeighbors);
-
-                    // Construir mensaje de salida para el usuario
-                    resultMessage += `Usuario ${i + 1}:\n`;
-                    for (const neighbor of neighbors) {
-                        resultMessage += `  Vecino ${neighbor.index + 1} - Similitud: ${neighbor.similarity.toFixed(4)}\n`;
-                    }
-                    resultMessage += "\n";
-                }
-
-                return resultMessage;
-            }
-
+            return resultMessage;
+        }
     </script>
 </body>
 </html>

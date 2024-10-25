@@ -1,13 +1,23 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Resultados</title>
+    <title>Resultados del Procesamiento</title>
+    <!-- Bootstrap CSS desde CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
+
 <body>
-    <h1>Resultados del Procesamiento</h1>
-    <pre id="resultados"></pre>
+
+    <div class="container mt-5">
+        <h1 class="mb-4">Resultados del Procesamiento</h1>
+
+        <pre class="border p-3" id="resultados" style="background-color: #f8f9fa; color: #212529;">
+            No hay resultados disponibles.
+        </pre>
+    </div>
 
     <script>
         // Obtener los resultados de sessionStorage
@@ -19,5 +29,11 @@
             document.getElementById('resultados').textContent = 'No hay resultados disponibles.';
         }
     </script>
+
+    <!-- jQuery y Bootstrap JS desde CDN -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

@@ -190,6 +190,11 @@
                 // Descargar el archivo con los resultados
                 const nombreArchivo = option + '.txt';
                 descargarArchivo(nombreArchivo, resultMessage);
+                // Guardar los resultados en sessionStorage
+                sessionStorage.setItem('resultados', resultMessage);
+
+                // Abrir una nueva ventana para mostrar los resultados
+                window.open('resultados.html', '_blank');
             };
 
             reader.readAsText(fileInput.files[0]);

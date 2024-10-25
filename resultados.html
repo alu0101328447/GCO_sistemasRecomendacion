@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados</title>
+</head>
+<body>
+    <h1>Resultados del Procesamiento</h1>
+    <pre id="resultados"></pre>
+
+    <script>
+        // Obtener los resultados de sessionStorage
+        const resultados = sessionStorage.getItem('resultados');
+
+        if (resultados) {
+            document.getElementById('resultados').textContent = resultados;
+        } else {
+            document.getElementById('resultados').textContent = 'No hay resultados disponibles.';
+        }
+    </script>
+</body>
+</html>

@@ -12,10 +12,9 @@
 # Índice
 
 1. [Introducción](#1-introducción)
-2. [Antes de empezar](#2-antes-de-empezar)
-3. [Codigo Desarrollado](#3-codigo-desarrollado)
-4. [Ejemplo de Uso](#4-ejemplo-de-uso)
-5. [Conclusiones](#5-conclusiones)
+2. [Codigo Desarrollado](#2-codigo-desarrollado)
+3. [Ejemplo de Uso](#3-ejemplo-de-uso)
+4. [Conclusiones](#4-conclusiones)
 
 ---
 
@@ -25,21 +24,7 @@ En esta práctica nos encargaremos de implemntar un sistema de recomendación ut
 
 ---
 
-# 2. Antes de empezar
-
-Para poder ejecutar el sistema implementado, se deben realizar una serie de instrucciones de instalación de dependencias y/o despliegue del software que hemos creado.
-
-```bash
-
-  aqui va el codigo para instalar depeendencias y movidas
-
-```
-
-Con este codigo **_explicar el codigo que acabamos de instalar_**.
-
----
-
-# 3. Codigo Desarrollado
+# 2. Codigo Desarrollado
 
 ```c++
 
@@ -49,13 +34,30 @@ Con este codigo **_explicar el codigo que acabamos de instalar_**.
 
 ---
 
-# 4. Ejemplo de uso
+# 3. Ejemplo de uso
 
-**_aqui toca meter imagenes y movidas para ejemplo de usos de la pagina, si eso miramos un pdf o movidas, creo que en el campus ponen ejemplos de como va._**
+Para poder utilizar nuestra herramienta, debe acceder al siguente [enlace](https://alu0101328447.github.io/GCO_sistemasRecomendacion/), 
+y en él, le aparecerá la sigiente pagina
+
+![imagen1](./imgs/img1.png)
+
+Desde ahi, debemos escoger uno de los ficheros de pruebas aportado en el siguiente [enlace](https://github.com/ull-cs/gestion-conocimiento/tree/main/recommeder-systems/examples-utility-matrices)
+
+Tras ello, debemos puntualizar el resto de opciones:
+
+- **Número de vecinos**, para seleccionar sobre cuantos vecinos se pretende calcular las similitudes
+- **Opcion de calculo**, donde se elige las diferentes opciones del calculo  
+- **Prediccion**, señala si se quiere realizar el calculo respecto a la diferencia con la media, o mediante una prediccion simple 
+
+Tras seleccionar los ajustes, se accede al calculo, y por un lado aparece la pantalla con el resultado del calculo
+
+![imagen2](./imgs/img2.png)
+
+Ademas de que automaticamente, se descarga un fichero con el contenido del calculo.
 
 ---
 
-# 5. Conclusiones
+# 4. Conclusiones
 
 Finalmente, con este apartado terminamos de explicar y comentar nuestra implementación de un sistemas de recomendación mediante los metodos de filtrado colaborativo.
 

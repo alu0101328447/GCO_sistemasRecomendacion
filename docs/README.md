@@ -26,11 +26,244 @@ En esta práctica nos encargaremos de implemntar un sistema de recomendación ut
 
 # 2. Codigo Desarrollado
 
-```c++
+Para empezar, nuestra implementación funciona sobre una pagina web, por tanto, no requerimos de realizar un despliege 
+o una secuencia de comandos para utilizar nuestra herramienta.
 
-//meter codigo de las movidas
+Sobre esto, distinguimos 2 principales ficheros: [**_index.html_**](../index.html) y [**_resultados.html_**](../resultados.html)
+
+## Index.html
+
+En este ficheros nos encargamos tanto de la parte de interaccion del usuario como de realizar los calculos pertinentes.
+
+Para empezar, definimos un encabezado que contiene las diferentes bibliotecas para gestionar el diseño de la pagina con _BootStrap4_ y el manejo de formularios. 
+
+```html
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesar Archivo</title>
+    <!-- Bootstrap CSS desde CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- jQuery y Bootstrap JS desde CDN -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
 
 ```
+
+Luego, definimos las opciones del menu, donde implementamos gracias a las librerias definidas, las diferentes opciones que se aplican en la herramienta.
+
+- **_Procesar archivo_**
+
+Con esta opcion, tratamos de poder recoger un fichero de datos que contuviese la matriz de valores, con la que se quiere trabajar.  
+Concretamente se preparo para aceptar ficheros de terminación **.txt**
+
+```html
+
+ <div class="container mt-5">
+        <h1 class="mb-4">Procesar Archivo</h1>
+
+        <div class="form-group col-md-6">
+            <label for="fileInput">Selecciona un archivo:</label>
+            <div class="custom-file">
+                <input type="file" class="custom-file-input" id="fileInput" accept=".txt" />
+                <label class="custom-file-label" for="fileInput">Elige un archivo...</label>
+            </div>
+        </div>
+
+```
+
+Ademas del codigo escrito en Javascript para poder tratar con el fichero aportado.
+
+```javascript
+
+document.getElementById("fileInput").addEventListener("change", function () {
+    const fileName = this.files[0] ? this.files[0].name : "Elige un archivo...";
+    const label = this.nextElementSibling;
+    label.innerText = fileName;
+});
+
+```
+
+- **_Numero de vecinos_**
+
+Con esta opcion, pedimos al usuario el numero de vecinos con los que se quiere realizar el calculo.
+Ademas añadimos una restricción que nos pide como minimo escoger al menos un vecino.
+
+```html
+
+<div class="form-group col-md-6">
+    <label for="numberInput">Introduce el número de vecinos:</label>
+    <input type="number" class="form-control" id="numberInput" min="1" />
+</div>
+
+```
+
+- **_Calculo de similitudes_**
+
+Con esta opcion, se puede seleccionar el formato a cerca del calculo de similitudes, donde podemos escoger
+las 3 principales implmentaciones que se requerían en la práctica.
+
+```html
+
+        <div class="form-group col-md-6">
+            <label for="optionSelect">Selecciona una opción:</label>
+            <select class="form-control" id="optionSelect">
+                <option value="CorPearson">Correlación de Pearson</option>
+                <option value="DistCoseno">Distancia Coseno</option>
+                <option value="DistEuclidea">Distancia Euclidiana</option>
+            </select>
+        </div>
+
+```
+
+1. **Correlación de Pearson**
+
+En esta opcion, calculamos la correlación de Pearson entre los pares de datos.
+
+Para empezar, el codigo se encarga de filtrar los pares para que los datos que lee sean validos, 
+solo en ese caso los añade en el par.
+
+Luego, nos encargamos de introducir los valores del par en diferentes arrays, separando el primer valor del par del segundo en diferentes arrays
+lo que mas adelante nos permitirá calcular medias, y demas medidas de dispersión. 
+
+Antes de ello, comprobamos si el numero de pares que hemos generado es mayor a 0, dado a que si no se generan pares validos, el valor de la correlación sera 0.
+
+Tras realizar esa comprobación, continuamos calculado las medias de los valores en cada array, y con ello ya podemos calcular ambas partes de la formula de la correlación de Pearson.
+Por un lado, nos encargamos de calcular el numerador, y por otro el denominador, comprobando que no de 0. 
+
+```Javascript
+
+ function calcularCorrelacionPearson(x, y) {
+    const validPairs = x.reduce((acc, xi, i) => {
+        if (!isNaN(xi) && !isNaN(y[i])) {
+            acc.push([xi, y[i]]);
+        }
+        return acc;
+    }, []);
+
+    const validX = validPairs.map(pair => pair[0]);
+    const validY = validPairs.map(pair => pair[1]);
+
+    const n = validX.length;
+    if (n === 0) return 0;
+
+    const meanX = validX.reduce((a, b) => a + b, 0) / n;
+    const meanY = validY.reduce((a, b) => a + b, 0) / n;
+
+    let numerator = 0;
+    let denominatorX = 0;
+    let denominatorY = 0;
+
+    for (let i = 0; i < n; i++) {
+        const diffX = validX[i] - meanX;
+        const diffY = validY[i] - meanY;
+
+        numerator += diffX * diffY;
+        denominatorX += diffX * diffX;
+        denominatorY += diffY * diffY;
+    }
+
+    const denominator = Math.sqrt(denominatorX) * Math.sqrt(denominatorY);
+
+    return denominator === 0 ? 0 : numerator / denominator;
+}
+
+```
+
+2. **Distancia de Coseno**
+
+En esta opcion, calculamos la distancia de coseno entre dos vectores
+
+Para empezar, volvemos a filtrar los pares para que los datos que lee sean validos, solo en ese caso los añade en el par.
+
+Luego, nos encargamos de introducir los valores del par en diferentes arrays, separando el primer valor del par del segundo en diferentes arrays
+lo que mas adelante nos permitirá calcular medias, y demas medidas de dispersión. 
+
+Ahora toca calcular el producto punto entre _validA_ y _validB_ sumando el producto de cada par correspondiente, el cual se calcula
+con la suma de multiplicar cada elemento de _validA_ con el correspondiente de _validB_.
+
+Antes de teminar con los calculos, debemos calcular la magnitud de _validA_ y _validB_ mediante la suma del cuadrado de cada elemento y luego sacando la raíz cuadrada del total.
+
+Finalmente se operamos para devolver la distancia del coseno a partir de los datos anteriormente calculados.
+
+```Javascript
+
+function calcularDistanciaCoseno(a, b) {
+    const validPairs = a.reduce((acc, ai, i) => {
+        if (!isNaN(ai) && !isNaN(b[i])) {
+            acc.push([ai, b[i]]);
+        }
+        return acc;
+    }, []);
+
+    const validA = validPairs.map(pair => pair[0]);
+    const validB = validPairs.map(pair => pair[1]);
+
+    const dotProduct = validA.reduce((sum, ai, i) => sum + ai * validB[i], 0);
+    const magnitudeA = Math.sqrt(validA.reduce((sum, ai) => sum + ai * ai, 0));
+    const magnitudeB = Math.sqrt(validB.reduce((sum, bi) => sum + bi * bi, 0));
+
+    return (magnitudeA === 0 || magnitudeB === 0) ? 1 : 1 - (dotProduct / (magnitudeA * magnitudeB));
+}
+
+```
+
+3. **Distancia de Coseno**
+
+En esta opcion, calculamos la distancia de coseno entre dos vectores
+
+Para empezar, volvemos a filtrar los pares para que los datos que lee sean validos, solo en ese caso los añade en el par.
+
+Luego, calculamos la suma de los cuadrados de las diferencias, es decir, restamos ambos valores del par y calculamos el cuadrado del resultado,
+y con cada para realizamos estos para sumar fichos valores obtenido asi el valor al que luego le pasamos por una raiz cuadrada para obtener nuestro resultado deseado.
+
+```Javascript
+
+function calcularDistanciaEuclidiana(a, b) {
+    const validPairs = a.reduce((acc, ai, i) => {
+        if (!isNaN(ai) && !isNaN(b[i])) {
+            acc.push([ai, b[i]]); 
+        }
+        return acc;
+    }, []);
+
+    const sumOfSquares = validPairs.reduce((sum, pair) => {
+        const [ai, bi] = pair;
+        return sum + Math.pow(ai - bi, 2);
+    }, 0);
+
+    return Math.sqrt(sumOfSquares);
+}
+
+```
+
+- **_Tipo de prediccion_**
+
+Con esta opcion, el usuario puede deducir como se calculan los valores a inferir entre las diferentes implementaciones que hemos realizado para esta práctica.
+
+```html
+
+    <div class="form-group col-md-6">
+        <label for="predictionSelect">Selecciona tipo de predicción:</label>
+        <select class="form-control" id="predictionSelect">
+            <option value="simple">Predicción Simple</option>
+            <option value="diferencia">Diferencia con la Media</option>
+        </select>
+    </div>
+
+```
+
+1. **Prediccion Simple**
+
+_falta por hacer_
+
+
+2. **Diferencia con la media**
+
+_falta por hacer_
 
 ---
 
@@ -62,5 +295,3 @@ Ademas de que automaticamente, se descarga un fichero con el contenido del calcu
 Finalmente, con este apartado terminamos de explicar y comentar nuestra implementación de un sistemas de recomendación mediante los metodos de filtrado colaborativo.
 
 **_aqui la movida seria meter mas paja de como funciona, a modo de resumen de lo que hemos hablado en el resto de informe_**
-
----

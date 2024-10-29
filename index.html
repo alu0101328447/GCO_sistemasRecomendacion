@@ -97,8 +97,6 @@
                     numerator += validX[i] * validY[i];
                     denominatorX += validX[i] * validX[i];
                     denominatorY += validY[i] * validY[i];
-                } else {
-                    console.log("No entra")
                 }
             }
 
@@ -106,44 +104,82 @@
             return denominator === 0 ? 0 : numerator / denominator;
         }
 
-        function calcularDistanciaCoseno(a, b) {
+        function calcularDistanciaCoseno(a, b, predictionType) {
             // Filtrar los pares válidos (mismo índice, sin NaN)
             const validPairs = a.reduce((acc, ai, i) => {
                 if (!isNaN(ai) && !isNaN(b[i])) {
-                    acc.push([ai, b[i]]); // Solo se añade el par si ambos son válidos
+                    acc.push([ai, b[i]]);
                 }
                 return acc;
             }, []);
 
-            // Desestructurar los valores válidos en arrays separados
             const validA = validPairs.map(pair => pair[0]);
             const validB = validPairs.map(pair => pair[1]);
 
-            const dotProduct = validA.reduce((sum, ai, i) => sum + ai * validB[i], 0);
-            const magnitudeA = Math.sqrt(validA.reduce((sum, ai) => sum + ai * ai, 0));
-            const magnitudeB = Math.sqrt(validB.reduce((sum, bi) => sum + bi * bi, 0));
+            let dotProduct = 0;
+            let magnitudeA = 0;
+            let magnitudeB = 0;
+
+            if (predictionType === "Diferencia") {
+                const meanA = validA.reduce((sum, ai) => sum + ai, 0) / validA.length;
+                const meanB = validB.reduce((sum, bi) => sum + bi, 0) / validB.length;
+
+                dotProduct = validA.reduce((sum, ai, i) => sum + (ai - meanA) * (validB[i] - meanB), 0);
+                magnitudeA = Math.sqrt(validA.reduce((sum, ai) => sum + Math.pow(ai - meanA, 2), 0));
+                magnitudeB = Math.sqrt(validB.reduce((sum, bi) => sum + Math.pow(bi - meanB, 2), 0));
+            } else if (predictionType === "Simple") {
+                dotProduct = validA.reduce((sum, ai, i) => sum + ai * validB[i], 0);
+                magnitudeA = Math.sqrt(validA.reduce((sum, ai) => sum + ai * ai, 0));
+                magnitudeB = Math.sqrt(validB.reduce((sum, bi) => sum + bi * bi, 0));
+            }
 
             // Evitar división por cero
-            return (magnitudeA === 0 || magnitudeB === 0) ? 1 : 1 - (dotProduct / (magnitudeA * magnitudeB)); // Devuelve la distancia coseno
+            if (magnitudeA === 0 || magnitudeB === 0) {
+                return 1;
+            }
+
+            const similarity = dotProduct / (magnitudeA * magnitudeB);
+            const distance = 1 - Math.min(Math.max(similarity, 0), 1); // Normaliza entre 0 y 1
+
+            return distance;
         }
 
-        function calcularDistanciaEuclidiana(a, b) {
+
+
+        function calcularDistanciaEuclidiana(a, b, predictionType) {
             // Filtrar los pares válidos (mismo índice, sin NaN)
             const validPairs = a.reduce((acc, ai, i) => {
                 if (!isNaN(ai) && !isNaN(b[i])) {
-                    acc.push([ai, b[i]]); // Solo se añade el par si ambos son válidos
+                    acc.push([ai, b[i]]);
                 }
                 return acc;
             }, []);
 
-            // Calcular la suma de los cuadrados de las diferencias
-            const sumOfSquares = validPairs.reduce((sum, pair) => {
-                const [ai, bi] = pair;
-                return sum + Math.pow(ai - bi, 2);
-            }, 0);
+            let sumOfSquares = 0;
 
-            return Math.sqrt(sumOfSquares); // Devuelve la raíz cuadrada de la suma de los cuadrados
+            if (predictionType === "Diferencia") {
+                const meanA = validPairs.reduce((sum, pair) => sum + pair[0], 0) / validPairs.length;
+                const meanB = validPairs.reduce((sum, pair) => sum + pair[1], 0) / validPairs.length;
+
+                sumOfSquares = validPairs.reduce((sum, [ai, bi]) => {
+                    return sum + Math.pow((ai - meanA) - (bi - meanB), 2);
+                }, 0);
+            } else if (predictionType === "Simple") {
+                sumOfSquares = validPairs.reduce((sum, [ai, bi]) => {
+                    return sum + Math.pow(ai - bi, 2);
+                }, 0);
+            }
+
+            const distance = Math.sqrt(sumOfSquares);
+
+            // Normalización opcional (solo si es necesario que esté entre 0 y 1)
+            const maxDistance = Math.sqrt(validPairs.length * Math.pow(100, 2)); // Ajusta 100 al valor máximo posible de diferencia
+            const normalizedDistance = distance / maxDistance;
+
+            return Math.min(normalizedDistance, 1); // Normaliza entre 0 y 1 si es necesario
         }
+
+
 
         function descargarArchivo(nombreArchivo, contenido) {
             const blob = new Blob([contenido], { type: 'text/plain' });
@@ -286,11 +322,11 @@
 
                             // Calcular similitud según la opción seleccionada
                             if (option === 'CorPearson') {
-                                similarity = calcularCorrelacionPearson(userA, userB, predictionType );
+                                similarity = calcularCorrelacionPearson(userA, userB, predictionType);
                             } else if (option === 'DistCoseno') {
-                                similarity = calcularDistanciaCoseno(userA, userB, predictionType );
+                                similarity = calcularDistanciaCoseno(userA, userB, predictionType);
                             } else if (option === 'DistEuclidea') {
-                                similarity = calcularDistanciaEuclidiana(userA, userB, predictionType );
+                                similarity = calcularDistanciaEuclidiana(userA, userB, predictionType);
                             }
 
                             // Agregar similitud a la lista

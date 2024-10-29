@@ -43,8 +43,8 @@
         <div class="form-group col-md-6">
             <label for="predictionSelect">Selecciona tipo de predicción:</label>
             <select class="form-control" id="predictionSelect">
-                <option value="simple">Predicción Simple</option>
-                <option value="diferencia">Diferencia con la Media</option>
+                <option value="Simple">Predicción Simple</option>
+                <option value="Diferencia">Diferencia con la Media</option>
             </select>
         </div>
 
@@ -61,29 +61,25 @@
             label.innerText = fileName; // Cambia el texto del label al nombre del archivo
         });
 
-
-        function calcularCorrelacionPearson(x, y) {
+        function calcularCorrelacionPearson(x, y, predictionType) {
+            console.log("correlacion pearosn:", predictionType)
             // Filtrar los pares válidos (mismo índice, sin NaN)
             const validPairs = x.reduce((acc, xi, i) => {
                 if (!isNaN(xi) && !isNaN(y[i])) {
-                    acc.push([xi, y[i]]); // Solo se añade el par si ambos son válidos
+                    acc.push([xi, y[i]]);
                 }
                 return acc;
             }, []);
 
-            // Desestructurar los valores válidos en arrays separados
             const validX = validPairs.map(pair => pair[0]);
             const validY = validPairs.map(pair => pair[1]);
 
-            // Comprueba si no hay pares válidos
             const n = validX.length;
-            if (n === 0) return 0; // No hay pares válidos
+            if (n === 0) return 0;
 
-            // Calcular las medias de x y y
             const meanX = validX.reduce((a, b) => a + b, 0) / n;
             const meanY = validY.reduce((a, b) => a + b, 0) / n;
 
-            // Cálculos del numerador y denominador
             let numerator = 0;
             let denominatorX = 0;
             let denominatorY = 0;
@@ -92,17 +88,23 @@
                 const diffX = validX[i] - meanX;
                 const diffY = validY[i] - meanY;
 
-                numerator += diffX * diffY;
-                denominatorX += diffX * diffX;
-                denominatorY += diffY * diffY;
+                // Diferenciar entre predicción simple y diferencia con la media
+                if (predictionType === "Diferencia") {
+                    numerator += diffX * diffY;
+                    denominatorX += diffX * diffX;
+                    denominatorY += diffY * diffY;
+                } else if (predictionType === "Simple") {
+                    numerator += validX[i] * validY[i];
+                    denominatorX += validX[i] * validX[i];
+                    denominatorY += validY[i] * validY[i];
+                } else {
+                    console.log("No entra")
+                }
             }
 
             const denominator = Math.sqrt(denominatorX) * Math.sqrt(denominatorY);
-
-            return denominator === 0 ? 0 : numerator / denominator; // Evita división por cero
+            return denominator === 0 ? 0 : numerator / denominator;
         }
-
-
 
         function calcularDistanciaCoseno(a, b) {
             // Filtrar los pares válidos (mismo índice, sin NaN)
@@ -125,7 +127,6 @@
             return (magnitudeA === 0 || magnitudeB === 0) ? 1 : 1 - (dotProduct / (magnitudeA * magnitudeB)); // Devuelve la distancia coseno
         }
 
-
         function calcularDistanciaEuclidiana(a, b) {
             // Filtrar los pares válidos (mismo índice, sin NaN)
             const validPairs = a.reduce((acc, ai, i) => {
@@ -143,7 +144,6 @@
 
             return Math.sqrt(sumOfSquares); // Devuelve la raíz cuadrada de la suma de los cuadrados
         }
-
 
         function descargarArchivo(nombreArchivo, contenido) {
             const blob = new Blob([contenido], { type: 'text/plain' });
@@ -185,7 +185,7 @@
                 // Mostrar matriz original
                 let resultMessage = `Matriz original:\n${matrix.map(row => row.join(' ')).join('\n')}\n\n`;
 
-                const predictions = calcularPredicciones(matrix, numNeighbors, option);
+                const predictions = calcularPredicciones(matrix, numNeighbors, option, predictionType);
 
                 const utilityMatrix = matrix.map((row, i) =>
                     row.map((value, j) => isNaN(value) ? predictions[i][j] : value)
@@ -194,7 +194,7 @@
                 resultMessage += `Matriz de utilidad con predicciones:\n${utilityMatrix.map(row => row.join(' ')).join('\n')}\n\n`;
 
                 // Similitud y vecinos seleccionados
-                const similarityInfo = calcularSimilitudes(matrix, utilityMatrix, numNeighbors, option);
+                const similarityInfo = calcularSimilitudes(matrix, utilityMatrix, numNeighbors, option, predictionType);
                 resultMessage += similarityInfo;
 
                 // Descargar el archivo con los resultados
@@ -210,16 +210,17 @@
             reader.readAsText(fileInput.files[0]);
         });
 
-        function calcularPredicciones(matrix, numNeighbors, option) {
+        function calcularPredicciones(matrix, numNeighbors, option, predictionType) {
             const predictions = matrix.map((row, rowIndex) =>
                 row.map((value, colIndex) =>
-                    (isNaN(value) ? calcularValorFaltante(matrix, rowIndex * row.length + colIndex, numNeighbors, option) : value)
+                    (isNaN(value) ? calcularValorFaltante(matrix, rowIndex * row.length + colIndex, numNeighbors, option, predictionType) : value)
                 )
             );
             return predictions;
         }
 
-        function calcularValorFaltante(matrix, index, numNeighbors, option) {
+        function calcularValorFaltante(matrix, index, numNeighbors, option, predictionType) {
+            console.log("valor en calcular valor faltante: ", predictionType)
             const userIndex = Math.floor(index / matrix[0].length); // Índice del usuario (fila)
             const itemIndex = index % matrix[0].length; // Índice del ítem (columna)
 
@@ -232,11 +233,11 @@
 
                     // Calcular similitud según la opción seleccionada
                     if (option === 'CorPearson') {
-                        similarity = calcularCorrelacionPearson(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                        similarity = calcularCorrelacionPearson(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null), predictionType);
                     } else if (option === 'DistCoseno') {
-                        similarity = calcularDistanciaCoseno(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                        similarity = calcularDistanciaCoseno(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null), predictionType);
                     } else if (option === 'DistEuclidea') {
-                        similarity = calcularDistanciaEuclidiana(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null));
+                        similarity = calcularDistanciaEuclidiana(matrix[userIndex].filter(v => v !== null), matrix[i].filter(v => v !== null), predictionType);
                     }
 
                     if (!isNaN(similarity)) {
@@ -266,8 +267,7 @@
             return denominator === 0 ? null : parseFloat((numerator / denominator).toFixed(3)); // Evitar división por cero
         }
 
-
-        function calcularSimilitudes(originalMatrix, utilityMatrix, numNeighbors, option) {
+        function calcularSimilitudes(originalMatrix, utilityMatrix, numNeighbors, option, predictionType) {
             let resultMessage = "Similitudes y vecinos seleccionados:\n";
 
             // Iterar sobre cada usuario
@@ -286,11 +286,11 @@
 
                             // Calcular similitud según la opción seleccionada
                             if (option === 'CorPearson') {
-                                similarity = calcularCorrelacionPearson(userA, userB);
+                                similarity = calcularCorrelacionPearson(userA, userB, predictionType );
                             } else if (option === 'DistCoseno') {
-                                similarity = calcularDistanciaCoseno(userA, userB);
+                                similarity = calcularDistanciaCoseno(userA, userB, predictionType );
                             } else if (option === 'DistEuclidea') {
-                                similarity = calcularDistanciaEuclidiana(userA, userB);
+                                similarity = calcularDistanciaEuclidiana(userA, userB, predictionType );
                             }
 
                             // Agregar similitud a la lista

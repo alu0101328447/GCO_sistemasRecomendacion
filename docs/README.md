@@ -21,6 +21,8 @@
 # 1. Introducción
 
 En esta práctica nos encargaremos de implemntar un sistema de recomendación utilizando metodos de filtrado colaborativo. 
+En el, nos encargaremos de realizar una implementación por pagina web, que nos permitirá hacer un analisis sobre la relación entre vecinos,
+adaptando los diferentes metodos vistos en las clases de teoria de forma funcional con este codigo.
 
 ---
 
@@ -33,7 +35,7 @@ Sobre esto, distinguimos 2 principales ficheros: [**_index.html_**](../index.htm
 
 ## Index.html
 
-En este ficheros nos encargamos tanto de la parte de interaccion del usuario como de realizar los calculos pertinentes.
+En este fichero nos encargamos tanto de la parte de interaccion del usuario como de realizar los calculos pertinentes.
 
 Para empezar, definimos un encabezado que contiene las diferentes bibliotecas para gestionar el diseño de la pagina con _BootStrap4_ y el manejo de formularios. 
 
@@ -211,31 +213,43 @@ function calcularDistanciaCoseno(a, b) {
 
 ```
 
-3. **Distancia de Coseno**
+3. **Distancia Euclidiana**
 
-En esta opcion, calculamos la distancia de coseno entre dos vectores
+En esta opcion, calculamos la distancia euclidiana entre dos vectores
 
 Para empezar, volvemos a filtrar los pares para que los datos que lee sean validos, solo en ese caso los añade en el par.
 
-Luego, calculamos la suma de los cuadrados de las diferencias, es decir, restamos ambos valores del par y calculamos el cuadrado del resultado,
-y con cada para realizamos estos para sumar fichos valores obtenido asi el valor al que luego le pasamos por una raiz cuadrada para obtener nuestro resultado deseado.
-
 ```Javascript
 
-function calcularDistanciaEuclidiana(a, b) {
+function calcularDistanciaEuclidiana(a, b, predictionType) {
     const validPairs = a.reduce((acc, ai, i) => {
         if (!isNaN(ai) && !isNaN(b[i])) {
-            acc.push([ai, b[i]]); 
+            acc.push([ai, b[i]]);
         }
         return acc;
     }, []);
 
-    const sumOfSquares = validPairs.reduce((sum, pair) => {
-        const [ai, bi] = pair;
-        return sum + Math.pow(ai - bi, 2);
-    }, 0);
+    let sumOfSquares = 0;
 
-    return Math.sqrt(sumOfSquares);
+    if (predictionType === "Diferencia") {
+        const meanA = validPairs.reduce((sum, pair) => sum + pair[0], 0) / validPairs.length;
+        const meanB = validPairs.reduce((sum, pair) => sum + pair[1], 0) / validPairs.length;
+
+        sumOfSquares = validPairs.reduce((sum, [ai, bi]) => {
+            return sum + Math.pow((ai - meanA) - (bi - meanB), 2);
+        }, 0);
+    } else if (predictionType === "Simple") {
+        sumOfSquares = validPairs.reduce((sum, [ai, bi]) => {
+            return sum + Math.pow(ai - bi, 2);
+        }, 0);
+    }
+
+    const distance = Math.sqrt(sumOfSquares);
+
+    const maxDistance = Math.sqrt(validPairs.length * Math.pow(100, 2)); 
+    const normalizedDistance = distance / maxDistance;
+
+    return Math.min(normalizedDistance, 1); 
 }
 
 ```
@@ -243,6 +257,8 @@ function calcularDistanciaEuclidiana(a, b) {
 - **_Tipo de prediccion_**
 
 Con esta opcion, el usuario puede deducir como se calculan los valores a inferir entre las diferentes implementaciones que hemos realizado para esta práctica.
+
+En la pagina, podemos escoger que tipo de medida se va a utilizar para la inferencia de los datos que faltan.
 
 ```html
 
@@ -256,14 +272,154 @@ Con esta opcion, el usuario puede deducir como se calculan los valores a inferir
 
 ```
 
-1. **Prediccion Simple**
+A nivel de implementación, como pudimos ver en el codigo de la distancia euclidiana, como la implementación se derivaba a 2 posibles formas de calcularlo,
+las cuales son las diferentes predicciones que se deben realizar para inferir los datos restantes.
 
-_falta por hacer_
+1. **Prediccion mediante la diferencia con la media**
 
+Si la prediccion se realiza con la diferencia de las desviaciones con respecto a las medias, lo que se calculan son las medias de los vectores,
+para que mediante la resta de su arreglo, se calcule el cuadrado de la diferencia de los valores.
 
-2. **Diferencia con la media**
+```Javascript
 
-_falta por hacer_
+if (predictionType === "Diferencia") {
+    const meanA = validPairs.reduce((sum, pair) => sum + pair[0], 0) / validPairs.length;
+    const meanB = validPairs.reduce((sum, pair) => sum + pair[1], 0) / validPairs.length;
+
+    sumOfSquares = validPairs.reduce((sum, [ai, bi]) => {
+        return sum + Math.pow((ai - meanA) - (bi - meanB), 2);
+    }, 0);
+}
+
+```
+
+2. **Prediccion Simple**
+
+Mientras tanto ocurre que si la prediccion simple, se calcula con la suma de los cuadrados de la diferencia entre los valores de cada vector.
+
+```javascript
+
+sumOfSquares = validPairs.reduce((sum, [ai, bi]) => {
+    return sum + Math.pow(ai - bi, 2);
+}, 0);
+
+```
+
+Una vez con todas las opciones seleccionadas y encargado para realizar los calculos, tenemos el codigo que nos permite realizar todos los calculos
+con los parametros y ajustes introducidos.
+
+```javascript
+
+document.getElementById('processButton').addEventListener('click', function () {
+    const fileInput = document.getElementById('fileInput');
+    const numNeighbors = parseInt(document.getElementById('numberInput').value);
+    const option = document.getElementById('optionSelect').value;
+    const predictionType = document.getElementById('predictionSelect').value;
+
+    if (fileInput.files.length === 0) {
+        alert('Por favor, carga un archivo.');
+        return;
+    }
+    if (isNaN(numNeighbors) || numNeighbors < 1) {
+        alert('Por favor, introduce un número de vecinos válido.');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const fileContent = e.target.result.split('\n');
+        const minValue = parseFloat(fileContent[0].trim());
+        const maxValue = parseFloat(fileContent[1].trim());
+
+        const matrix = fileContent.slice(2).map(line =>
+            line.trim().split(' ').map(val => val === '-' ? NaN : parseFloat(val))
+        );
+
+        let resultMessage = `Matriz original:\n${matrix.map(row => row.join(' ')).join('\n')}\n\n`;
+        const predictions = calcularPredicciones(matrix, numNeighbors, option, predictionType);
+
+        const utilityMatrix = matrix.map((row, i) =>
+            row.map((value, j) => isNaN(value) ? predictions[i][j] : value)
+        );
+
+        resultMessage += `Matriz de utilidad con predicciones:\n${utilityMatrix.map(row => row.join(' ')).join('\n')}\n\n`;
+
+        const similarityInfo = calcularSimilitudes(matrix, utilityMatrix, numNeighbors, option, predictionType);
+        resultMessage += similarityInfo;
+
+        const nombreArchivo = option + '.txt';
+        descargarArchivo(nombreArchivo, resultMessage);
+        sessionStorage.setItem('resultados', resultMessage);
+
+        window.open('resultados.html', '_blank');
+    };
+
+    reader.readAsText(fileInput.files[0]);
+});
+
+```
+
+Finalmente ademas de imprimir los resultados por pantalla, adoptamos una funcion que nos permite crear y descargar un archivo de texto con el nombre y contenido especificados. 
+Los resultados incluyen la matriz original, la matriz de utilidad con predicciones y las similitudes de vecinos.
+
+```javascript
+
+function descargarArchivo(nombreArchivo, contenido) {
+    const blob = new Blob([contenido], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+```
+
+## Resultados.html
+
+Con este fichero se trata de recoger los datos obtenidos tras el calculo e imprimirlos por pantalla.
+
+```html
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados del Procesamiento</title>
+    <!-- Bootstrap CSS desde CDN -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+
+<body>
+
+    <div class="container mt-5">
+        <h1 class="mb-4">Resultados del Procesamiento</h1>
+
+        <pre class="border p-3" id="resultados" style="background-color: #f8f9fa; color: #212529;">
+            No hay resultados disponibles.
+        </pre>
+    </div>
+
+    <script>
+        // Obtener los resultados de sessionStorage
+        const resultados = sessionStorage.getItem('resultados');
+
+        if (resultados) {
+            document.getElementById('resultados').textContent = resultados;
+        } else {
+            document.getElementById('resultados').textContent = 'No hay resultados disponibles.';
+        }
+    </script>
+
+    <!-- jQuery y Bootstrap JS desde CDN -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+
+```
 
 ---
 

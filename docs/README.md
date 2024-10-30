@@ -450,4 +450,9 @@ Ademas de que automaticamente, se descarga un fichero con el contenido del calcu
 
 Finalmente, con este apartado terminamos de explicar y comentar nuestra implementación de un sistemas de recomendación mediante los metodos de filtrado colaborativo.
 
-**_aqui la movida seria meter mas paja de como funciona, a modo de resumen de lo que hemos hablado en el resto de informe_**
+Principalmente con la implementación desarrollada en este informe, hemos tratado de extraer información sobre un sistemas de recomendación, obtiendo los datos sobre las puntuaciones que los diferentes usuarios han aportado sobre ciertos productos, mediante una matriz que coloca en filas y columnas, los usuarios y los productos respectivamente, tal que el conteido de la tabla es la puntuacion de dichos usuarios sobre cierto producto.
+
+No obstante, dado que el feedback obtenido por los usuarios no es completo, con nuestra implementacion podemos inferir los datos que faltan en base a las puntuaciones de otros usuarios sobre dicho producto, e las puntuaciones de dicho usuario sobre productos relacionados, ademas de conseguir una similitud sobre los productos entre usuarios.
+
+Concretamente para un sistema de recomendacion es algo esencial, porque nos permite idear, con la similitud entre usuarios, que productos pueden ser mas favorablemente recomendados, precisamente con las menores distancias euclidianas señalamos elementos o productos con alta similitud. Estos elementos pueden priorizarse en las recomendaciones a usuarios con patrones de interés similares, fortaleciendo la personalización de la recomendacion.
+  
